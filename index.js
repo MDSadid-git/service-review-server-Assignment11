@@ -10,6 +10,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+//MONGODB Server Url
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.fdmrdur.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, {
@@ -82,7 +83,6 @@ async function run() {
     });
     app.get("/addreviews", verifyJWT, async (req, res) => {
       const decoded = req.decoded;
-      console.log("inside", decoded);
       if (decoded.email !== req.query.email) {
         res.status(403).send({ message: "unauthorized access" });
       }
