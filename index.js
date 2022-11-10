@@ -1,6 +1,7 @@
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 5000;
@@ -17,6 +18,24 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+function verifyJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).send({ message: "unauthorized access" });
+  }
+  const token = authHeader.split(" ")[1];
+  console.log(token);
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: "Forbidden access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
+
 async function run() {
   try {
     const photosCollection = client
@@ -25,6 +44,14 @@ async function run() {
     const photosaddreviews = client
       .db("mysportsphotos")
       .collection("addreviews");
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1d",
+      });
+      res.send({ token });
+    });
     app.get("/services", async (req, res) => {
       const query = {};
       const cursor = photosCollection.find(query);
@@ -49,11 +76,17 @@ async function run() {
       res.send(result);
     });
     app.post("/addreviews", async (req, res) => {
-      const order = req.body;
-      const result = await photosaddreviews.insertOne(order);
+      const reviews = req.body;
+      const result = await photosaddreviews.insertOne(reviews);
       res.send(result);
     });
-    app.get("/addreviews", async (req, res) => {
+    app.get("/addreviews", verifyJWT, async (req, res) => {
+      const decoded = req.decoded;
+      console.log("inside", decoded);
+      if (decoded.email !== req.query.email) {
+        res.status(403).send({ message: "unauthorized access" });
+      }
+
       let query = {};
 
       if (req.query.email) {
