@@ -22,6 +22,9 @@ async function run() {
     const photosCollection = client
       .db("mysportsphotos")
       .collection("photographer");
+    const photosaddreviews = client
+      .db("mysportsphotos")
+      .collection("addreviews");
     app.get("/services", async (req, res) => {
       const query = {};
       const cursor = photosCollection.find(query);
@@ -38,6 +41,16 @@ async function run() {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await photosCollection.findOne(query);
+      res.send(result);
+    });
+    app.post("/servicespage", async (req, res) => {
+      const order = req.body;
+      const result = await photosCollection.insertOne(order);
+      res.send(result);
+    });
+    app.post("/addreviews", async (req, res) => {
+      const order = req.body;
+      const result = await photosaddreviews.insertOne(order);
       res.send(result);
     });
   } finally {
