@@ -65,6 +65,21 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
+    app.patch("/addreviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+
+      const result = await photosaddreviews.updateOne(query, {
+        $set: req.body,
+      });
+      res.send(result);
+    });
+    app.get("/addreviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await photosaddreviews.findOne(query);
+      res.send(result);
+    });
     app.delete("/addreviews/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
